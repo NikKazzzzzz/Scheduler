@@ -1,0 +1,9 @@
+rabbitmq:
+  url: "amqp://quest:quest@rabbitmq:5672/"
+  queue: "events_queue"
+
+database:
+   path: "./storage/storage.db"
+
+scheduler:
+  check_interval: "1h"
