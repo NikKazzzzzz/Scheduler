@@ -12,7 +12,7 @@ type Config struct {
 	} `mapstructure:"rabbitmq"`
 
 	Database struct {
-		Path string `mapstructure:"path"`
+		DSN string `mapstructure:"dsn"`
 	} `mapstructure:"database"`
 
 	Scheduler struct {
@@ -20,8 +20,8 @@ type Config struct {
 	} `mapstructure:"scheduler"`
 }
 
-func LoadConfig(path string) (*Config, error) {
-	viper.SetConfigFile(path)
+func LoadConfig(dsn string) (*Config, error) {
+	viper.SetConfigFile(dsn)
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, err
 	}

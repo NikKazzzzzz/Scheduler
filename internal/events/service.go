@@ -22,7 +22,12 @@ func NewEventService(db *sql.DB) *EventService {
 }
 
 func (s *EventService) GetEventsInNext24Hours() ([]Event, error) {
-	query := `SELECT id, title, description, start_time, end_time FROM events WHERE start_time BETWEEN datetime('now') AND datetime('now', '+1 day')`
+	query := `
+		SELECT id, title, description, start_time, end_time 
+		FROM events 
+		WHERE start_time BETWEEN NOW AND NOW() + INTERVAL '1 day'
+	`
+
 	rows, err := s.DB.Query(query)
 	if err != nil {
 		return nil, err
@@ -35,16 +40,6 @@ func (s *EventService) GetEventsInNext24Hours() ([]Event, error) {
 		var startTimeStr, endTimeStr string
 
 		if err := rows.Scan(&event.ID, &event.Title, &event.Description, &startTimeStr, &endTimeStr); err != nil {
-			return nil, err
-		}
-
-		event.StartTime, err = time.Parse(time.RFC3339, startTimeStr)
-		if err != nil {
-			return nil, err
-		}
-
-		event.EndTime, err = time.Parse(time.RFC3339, endTimeStr)
-		if err != nil {
 			return nil, err
 		}
 

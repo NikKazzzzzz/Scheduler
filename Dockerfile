@@ -1,21 +1,22 @@
-FROM golang:1.22 as builder
+# Dockerfile for Scheduler
 
+# Use a Golang base image
+FROM golang:1.20-alpine
+
+# Set the working directory
 WORKDIR /app
 
+# Copy the go.mod and go.sum files
 COPY go.mod go.sum ./
 
-RUN go mod tidy
+# Download dependencies
+RUN go mod download
 
-COPY cmd/ .
-COPY config/scheduler.yaml ./config/scheduler.yaml
+# Copy the source code
+COPY . .
 
-RUN go mod tidy
-RUN go build -o scheduler
+# Build the application
+RUN go build -o scheduler cmd/scheduler/main.go
 
-FROM alpine:3.18
-
-WORKDIR /app
-COPY --from=builder /app/scheduler .
-COPY --from=builder /app/config/scheduler.yaml ./config/scheduler.yaml
-
+# Command to run the application
 CMD ["./scheduler"]
