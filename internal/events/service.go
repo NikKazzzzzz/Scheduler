@@ -25,7 +25,7 @@ func (s *EventService) GetEventsInNext24Hours() ([]Event, error) {
 	query := `
 		SELECT id, title, description, start_time, end_time 
 		FROM events 
-		WHERE start_time BETWEEN NOW AND NOW() + INTERVAL '1 day'
+		WHERE start_time BETWEEN NOW() AND NOW() + INTERVAL '1 day'
 	`
 
 	rows, err := s.DB.Query(query)
