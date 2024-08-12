@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/NikKazzzzzz/Scheduler/internal/config"
 	event24 "github.com/NikKazzzzzz/Scheduler/internal/events"
-	"github.com/NikKazzzzzz/Scheduler/internal/rabbirmq"
+	"github.com/NikKazzzzzz/Scheduler/internal/rabbitmq"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	"log"
 	"time"
@@ -24,11 +24,13 @@ func main() {
 
 	eventService := event24.NewEventService(db)
 
-	producer, err := rabbirmq.NewProducer(cfg.RabbitMQ.URL, cfg.RabbitMQ.Queue)
+	producer, err := rabbitmq.NewProducer(cfg.RabbitMQ.URL, cfg.RabbitMQ.Queue)
 	if err != nil {
 		log.Fatalf("failed to create producer: %v", err)
 	}
 	defer producer.Channel.Close()
+
+	log.Println("Scheduler server started and is running...")
 
 	for {
 		events, err := eventService.GetEventsInNext24Hours()
@@ -39,9 +41,13 @@ func main() {
 
 		for _, event := range events {
 			body := event.Title
+			log.Printf("Preparing to publish event: %s", body)
+
 			err := producer.PublishEvent(body)
 			if err != nil {
 				log.Printf("failed to publish event: %v", err)
+			} else {
+				log.Printf("Successfully published event: %s", body)
 			}
 		}
 

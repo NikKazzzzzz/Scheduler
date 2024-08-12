@@ -1,9 +1,9 @@
 rabbitmq:
-  url: "amqp://guest:guest@localhost:5672/"
+  url: "amqp://guest:guest@rabbitmq:5672/"
   queue: "events_queue"
 
 database:
-   dsn: "postgres://postgres:1213@localhost:5432/calendar?sslmode=disable"
+   dsn: "postgres://postgres:1213@postgres:5432/calendar?sslmode=disable"
 
 scheduler:
   check_interval: "1h"

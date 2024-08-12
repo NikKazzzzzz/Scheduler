@@ -1,8 +1,9 @@
-package rabbirmq
+package rabbitmq
 
 import (
 	"fmt"
 	"github.com/streadway/amqp"
+	"log"
 )
 
 type Producer struct {
@@ -47,5 +48,12 @@ func (p *Producer) PublishEvent(event string) error {
 			Body:        []byte(event),
 		},
 	)
+
+	if err != nil {
+		log.Printf("Failed to publish a message: %s", event)
+	} else {
+		log.Printf("Event published: %s", event)
+	}
+
 	return err
 }
