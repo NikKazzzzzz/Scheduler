@@ -1,49 +1,54 @@
 package events
 
 import (
-	"database/sql"
+	"context"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"time"
 )
 
 type Event struct {
-	ID          int
-	Title       string
-	Description string
-	StartTime   time.Time
-	EndTime     time.Time
+	ID          int       `bson:"id"`
+	Title       string    `bson:"title"`
+	Description string    `bson:"description"`
+	StartTime   time.Time `bson:"start_time"`
+	EndTime     time.Time `bson:"end_time"`
 }
 
 type EventService struct {
-	DB *sql.DB
+	Collection *mongo.Collection
 }
 
-func NewEventService(db *sql.DB) *EventService {
-	return &EventService{DB: db}
+func NewEventService(collection *mongo.Collection) *EventService {
+	return &EventService{Collection: collection}
 }
 
 func (s *EventService) GetEventsInNext24Hours() ([]Event, error) {
-	query := `
-		SELECT id, title, description, start_time, end_time 
-		FROM events 
-		WHERE start_time BETWEEN NOW() AND NOW() + INTERVAL '1 day'
-	`
+	now := time.Now()
+	oneDayLater := now.Add(24 * time.Hour)
 
-	rows, err := s.DB.Query(query)
+	filter := bson.M{
+		"start_time": bson.M{"$gte": now},
+		"end_time":   bson.M{"$lte": oneDayLater},
+	}
+
+	cursor, err := s.Collection.Find(context.TODO(), filter)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer cursor.Close(context.TODO())
 
 	var events []Event
-	for rows.Next() {
+	for cursor.Next(context.TODO()) {
 		var event Event
-		var startTimeStr, endTimeStr string
-
-		if err := rows.Scan(&event.ID, &event.Title, &event.Description, &startTimeStr, &endTimeStr); err != nil {
+		if err := cursor.Decode(&event); err != nil {
 			return nil, err
 		}
-
 		events = append(events, event)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
 	}
 
 	return events, nil

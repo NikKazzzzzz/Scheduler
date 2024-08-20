@@ -1,35 +1,49 @@
 package config
 
 import (
-	"github.com/spf13/viper"
+	"github.com/ilyakaznacheev/cleanenv"
+	"log"
+	"os"
 	"time"
 )
 
 type Config struct {
+	Env string `yaml:"log_level" env-default:"local"`
+
 	RabbitMQ struct {
-		URL   string `mapstructure:"url"`
-		Queue string `mapstructure:"queue"`
-	} `mapstructure:"rabbitmq"`
+		URL   string `yaml:"url"`
+		Queue string `yaml:"queue"`
+	} `yaml:"rabbitmq"`
 
 	Database struct {
-		DSN string `mapstructure:"dsn"`
-	} `mapstructure:"database"`
+		MongoDSN     string `yaml:"mongo_dsn"`
+		DatabaseName string `yaml:"databaseName"`
+		Username     string `yaml:"username" env:"MONGO_USERNAME"`
+		Password     string `yaml:"password" env:"MONGO_PASSWORD"`
+	} `yaml:"database"`
 
 	Scheduler struct {
-		CheckInterval time.Duration `mapstructure:"check_interval"`
-	} `mapstructure:"scheduler"`
+		CheckInterval time.Duration `yaml:"check_interval"`
+	} `yaml:"scheduler"`
 }
 
-func LoadConfig(dsn string) (*Config, error) {
-	viper.SetConfigFile(dsn)
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
+func MustLoad() *Config {
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		log.Fatal("CONFIG_PATH is not set")
 	}
 
-	var config Config
-	if err := viper.Unmarshal(&config); err != nil {
-		return nil, err
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		log.Fatalf("config file does not exist: %s", configPath)
 	}
 
-	return &config, nil
+	var cfg Config
+
+	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+		log.Fatalf("failed to read config: %s", err)
+	}
+
+	log.Printf("loaded config: %+v", cfg)
+
+	return &cfg
 }

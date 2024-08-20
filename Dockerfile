@@ -17,4 +17,4 @@ WORKDIR /app
 
 COPY --from=builder /app/Scheduler .
 
-CMD ["./Scheduler"]
+CMD ["sh", "-c", "sleep 20 && ./Scheduler"]
